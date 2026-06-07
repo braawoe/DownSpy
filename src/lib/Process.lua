@@ -377,27 +377,8 @@ function Process:Decompile(Script: LocalScript | ModuleScript): string
 
     return Decompiled
 end
-    
-    --// Send POST request to the API
-    local Responce = request({
-        Url = KonstantAPI,
-        Body = Bytecode,
-        Method = "POST",
-        Headers = {
-            ["Content-Type"] = "text/plain"
-        },
-    })
-
-    --// Error check
-    if Responce.StatusCode ~= 200 then
-        local Error = `--[KONSTANT] Error occured while requesting the API, error:\n`
-        Error ..= `\n--[[\n{Responce.Body}\n]]`
-        return Error, true
-    end
-
-    return Responce.Body
-end
-
+--// Note: Existing duplicate decompile POST block removed.
+--// Remaining code starts at line 400 for GetScriptFromFunc
 function Process:GetScriptFromFunc(Func: (...any) -> ...any)
     if not Func then return end
 
@@ -515,15 +496,15 @@ local ProcessCallback = newcclosure(function(Data: RemoteData, Remote, ...): tab
     if not OriginalFunc then return end
 
     --// Invoke orignal function safely
-        local Success, ReturnValues = pcall(function()
-            return {
-                OriginalFunc(Remote, ...)
-            }
-        end)
-        if not Success then
-            ReturnValues = nil
-        end
-        Data.ReturnValues = ReturnValues
+    local Success, ReturnValues = pcall(function()
+        return {
+            OriginalFunc(Remote, ...)
+        }
+    end)
+    if not Success then
+        ReturnValues = nil
+    end
+    Data.ReturnValues = ReturnValues
 
 function Process:ProcessRemote(Data: RemoteData, Remote, ...): table?
     --// Unpack Data
