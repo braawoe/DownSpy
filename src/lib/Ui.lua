@@ -189,15 +189,18 @@ function Ui:CreateButtons(Parent, Data: CreateButtons)
 		}):NextRow()
 	end
 
-	--// Create buttons
+	--// Create buttons asynchronously to avoid UI jank
 	for _, Button in next, Buttons do
-		local Container = Parent
-		if not NoTable then
-			Container = Parent:NextColumn()
-		end
-
-		ReGui:CheckConfig(Button, Base)
-		Container:Button(Button)
+	    task.spawn(function()
+	        local Container = Parent
+	        if not NoTable then
+	            Container = Parent:NextColumn()
+	        end
+	        ReGui:CheckConfig(Button, Base)
+	        Container:Button(Button)
+	        -- Yield after each button to give the UI time to render
+	        task.wait(0)
+	    end)
 	end
 end
 
@@ -404,19 +407,18 @@ function Ui:DisplayAura()
 	--// Title
 	local Title = `Sigma Spy | AURA: {AURA}`
 	local Seasonal = self:TurnSeasonal(Title)
-    Window:SetTitle(Seasonal)
-
-    wait(AURADELAY)
-end
-
+	Window:SetTitle(Seasonal)
+	end
 function Ui:AuraCounterService()
+ 
     task.spawn(function()
         while true do
             self:DisplayAura()
+            task.wait(0.1)  -- Rate limit to avoid starving other processes
         end
     end)
+ 
 end
-
 function Ui:CreateWindowContent(Window)
     --// Window group
     local Layout = Window:List({

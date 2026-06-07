@@ -332,19 +332,20 @@ end
 function Process:FindCallingLClosure(Offset: number)
     local Getfenv = Hook:GetOriginalFunc(getfenv)
     Offset += 1
+    local MaxDepth = 50
 
     while true do
         Offset += 1
-
+        if Offset > MaxDepth then
+            return nil
+        end
         --// Check if the stack level is valid
         local IsValid = debug.info(Offset, "l") ~= -1
         if not IsValid then continue end
-
         --// Check if the function is valid
         local Function = debug.info(Offset, "f")
-        if not Function then return end
+        if not Function then return nil end
         if Getfenv(Function) == SigmaENV then continue end
-
         return Function
     end
 end
@@ -513,11 +514,16 @@ local ProcessCallback = newcclosure(function(Data: RemoteData, Remote, ...): tab
     --// Check if the orignal function was passed
     if not OriginalFunc then return end
 
-    --// Invoke orignal function
-    return {
-        OriginalFunc(Remote, ...)
-    }
-end)
+    --// Invoke orignal function safely
+        local Success, ReturnValues = pcall(function()
+            return {
+                OriginalFunc(Remote, ...)
+            }
+        end)
+        if not Success then
+            ReturnValues = nil
+        end
+        Data.ReturnValues = ReturnValues
 
 function Process:ProcessRemote(Data: RemoteData, Remote, ...): table?
     --// Unpack Data
