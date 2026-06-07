@@ -1,6 +1,0 @@
-[
-  {"phase": "config_load", "duration_ms": 0.02, "error": null},
-  {"phase": "ui_init", "duration_ms": 0.00, "error": null},
-  {"phase": "hook_init", "duration_ms": 0.06, "error": null},
-  {"phase": "remote_check", "duration_ms": 0.00, "error": null}
-]
