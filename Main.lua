@@ -20,8 +20,8 @@
 	Build scripts are available in /build
 ]]
 
-local a,b={UseWorkspace=false,NoActors=false,FolderName='DownSpyN',RepoUrl=
-[[https://raw.githubusercontent.com/Jsssiee/DownSpyN/refs/heads/main]],ParserUrl
+local a,b={UseWorkspace=false,NoActors=false,FolderName='DownSpy',RepoUrl=
+[[https://raw.githubusercontent.com/braawoe/DownSpy/refs/heads/main]],ParserUrl
 =
 [[https://raw.githubusercontent.com/Jsssiee/Roblox-parser/refs/heads/main/dist/Main.luau]]
 },{...}local c=b[1]if typeof(c)=='table'then for d,e in c do a[d]=e end end
