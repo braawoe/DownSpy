@@ -505,6 +505,7 @@ local ProcessCallback = newcclosure(function(Data: RemoteData, Remote, ...): tab
         ReturnValues = nil
     end
     Data.ReturnValues = ReturnValues
+end)
 
 function Process:ProcessRemote(Data: RemoteData, Remote, ...): table?
     --// Unpack Data
