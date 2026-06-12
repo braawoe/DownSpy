@@ -496,7 +496,7 @@ local ProcessCallback = newcclosure(function(Data: RemoteData, Remote, ...): tab
     if not OriginalFunc then return end
 
     --// Invoke orignal function safely
-    local Success, ReturnValues = pcall(function()
+    local Success, ReturnValues = pcall(function(...)
         return {
             OriginalFunc(Remote, ...)
         }
