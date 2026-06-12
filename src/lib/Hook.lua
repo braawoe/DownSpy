@@ -445,7 +445,7 @@ function Hook:LoadReceiveHooks()
 
 	-- Search for remotes in services, also chunked.
 	for _, Service in next, game:GetChildren() do
-	    if table.find(BlackListedServices, Service.ClassName) then
+	    if not table.find(BlackListedServices, Service.ClassName) then
 	        -- skip this service
 	        goto skip_service
 	    end
