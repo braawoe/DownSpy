@@ -10,12 +10,12 @@ local Hook = {
 	OriginalIndex = nil,
 	PreviousFunctions = {},
 	DefaultConfig = {
-		FunctionPatches = true
-	}
+		FunctionPatches = true,
+	},
 }
 
 type table = {
-	[any]: any
+	[any]: any,
 }
 
 type MetaFunc = (Instance, ...any) -> ...any
@@ -31,7 +31,7 @@ local Communication
 local ExeENV = getfenv(1)
 
 function Hook:Init(Data)
-    Modules = Data.Modules
+	Modules = Data.Modules
 
 	Process = Modules.Process
 	Communication = Modules.Communication or Communication
@@ -55,7 +55,7 @@ local HookMiddle = newcclosure(function(OriginalFunc, Callback, AlwaysTable: boo
 
 	--// Return packed responce
 	if AlwaysTable then
-		return {OriginalFunc(...)}
+		return { OriginalFunc(...) }
 	end
 
 	--// Unpacked
@@ -73,14 +73,14 @@ function Hook:Index(Object: Instance, Key: string)
 end
 
 function Hook:PushConfig(Overwrites)
-    Merge(self, Overwrites)
+	Merge(self, Overwrites)
 end
 
 --// getrawmetatable
 function Hook:ReplaceMetaMethod(Object: Instance, Call: string, Callback: MetaFunc): MetaFunc
 	local Metatable = getrawmetatable(Object)
 	local OriginalFunc = clonefunction(Metatable[Call])
-	
+
 	--// Replace function
 	setreadonly(Metatable, false)
 	Metatable[Call] = newcclosure(function(...)
@@ -105,7 +105,7 @@ end
 function Hook:HookMetaCall(Object: Instance, Call: string, Callback: MetaFunc): MetaFunc
 	local Metatable = getrawmetatable(Object)
 	local Unhooked
-	
+
 	Unhooked = self:HookFunction(Metatable[Call], function(...)
 		return HookMiddle(Unhooked, Callback, true, ...)
 	end)
@@ -114,12 +114,12 @@ end
 
 function Hook:HookMetaMethod(Object: Instance, Call: string, Callback: MetaFunc): MetaFunc
 	local Func = newcclosure(Callback)
-	
+
 	--// Getrawmetatable
 	if Config.ReplaceMetaCallFunc then
 		return self:ReplaceMetaMethod(Object, Call, Func)
 	end
-	
+
 	--// Hookmetamethod
 	return self:HookMetaCall(Object, Call, Func)
 end
@@ -129,13 +129,15 @@ end
 --// By the way, thanks for copying this guys! Super appreciate the copycat
 function Hook:PatchFunctions()
 	--// Check if this function is disabled in the configuration
-	if Config.NoFunctionPatching then return end
+	if Config.NoFunctionPatching then
+		return
+	end
 
 	local Patches = {
 		--// Error detection patch
 		--// hookfunction may still be detected depending on the executor
-		[pcall] =  function(OldFunc, Func, ...)
-			local Responce = {OldFunc(Func, ...)}
+		[pcall] = function(OldFunc, Func, ...)
+			local Responce = { OldFunc(Func, ...) }
 			local Success, Error = Responce[1], Responce[2]
 			local IsC = iscclosure(Func)
 
@@ -167,7 +169,7 @@ function Hook:PatchFunctions()
 				Level += 2
 			end
 
-			local Responce = {OldFunc(Level, ...)}
+			local Responce = { OldFunc(Level, ...) }
 			local ENV = Responce[1]
 
 			--// __tostring ENV detection patch
@@ -177,13 +179,14 @@ function Hook:PatchFunctions()
 			end
 
 			return Responce
-		end
+		end,
 	}
 
 	--// Hook each function
 	for Func, CallBack in Patches do
 		local Wrapped = newcclosure(CallBack)
-		local OldFunc; OldFunc = self:HookFunction(Func, function(...)
+		local OldFunc
+		OldFunc = self:HookFunction(Func, function(...)
 			return Wrapped(OldFunc, ...)
 		end)
 
@@ -197,12 +200,16 @@ function Hook:GetOriginalFunc(Func)
 end
 
 function Hook:RunOnActors(Code: string, ChannelId: number)
-	if not getactors or not run_on_actor then return end
-	
+	if not getactors or not run_on_actor then
+		return
+	end
+
 	local Actors = getactors()
-	if not Actors then return end
-	
-	for _, Actor in Actors do 
+	if not Actors then
+		return
+	end
+
+	for _, Actor in Actors do
 		pcall(run_on_actor, Actor, Code, ChannelId)
 	end
 end
@@ -213,7 +220,7 @@ local function ProcessRemote(OriginalFunc, MetaMethod: string, self, Method: str
 		OriginalFunc = OriginalFunc,
 		MetaMethod = MetaMethod,
 		TransferType = "Send",
-		IsExploit = checkcaller()
+		IsExploit = checkcaller(),
 	}, self, ...)
 end
 
@@ -227,8 +234,10 @@ function Hook:HookRemoteTypeIndex(ClassName: string, FuncName: string)
 	--// Addionally, this is for __index calls.
 	--// 	A __namecall hook will not detect this
 	OriginalFunc = self:HookFunction(Func, function(self, ...)
-		--// Check if the Object is allowed 
-		if not Process:RemoteAllowed(self, "Send", FuncName) then return end
+		--// Check if the Object is allowed
+		if not Process:RemoteAllowed(self, "Send", FuncName) then
+			return
+		end
 
 		--// Process the remote data
 		return ProcessRemote(OriginalFunc, "__index", self, FuncName, ...)
@@ -266,14 +275,20 @@ function Hook:HookClientInvoke(Remote, Method, Callback)
 	end)
 
 	--// Some executors like Potassium will throw a error if the Callback value is nil
-	if not Success then return end
-	if not Function then return end
-	
+	if not Success then
+		return
+	end
+	if not Function then
+		return
+	end
+
 	--// Test hookfunction
 	local HookSuccess = pcall(function()
 		self:HookFunction(Function, Callback)
 	end)
-	if HookSuccess then return end
+	if HookSuccess then
+		return
+	end
 
 	--// Replace callback function otherwise
 	Remote[Method] = function(...)
@@ -290,30 +305,34 @@ end
 function Hook:ConnectClientRecive(Remote)
 	--// Check if the Remote class is allowed for receiving
 	local Allowed = Process:RemoteAllowed(Remote, "Receive")
-	if not Allowed then return end
+	if not Allowed then
+		return
+	end
 
 	--// Check if the Object has Remote class data
-    local ClassData = Process:GetClassData(Remote)
-    local IsRemoteFunction = ClassData.IsRemoteFunction
+	local ClassData = Process:GetClassData(Remote)
+	local IsRemoteFunction = ClassData.IsRemoteFunction
 	local NoReciveHook = ClassData.NoReciveHook
-    local Method = ClassData.Receive[1]
+	local Method = ClassData.Receive[1]
 
 	--// Check if the Recive should be hooked
-	if NoReciveHook then return end
+	if NoReciveHook then
+		return
+	end
 
 	--// New callback function
 	local function Callback(...)
-        return Process:ProcessRemote({
-            Method = Method,
-            IsReceive = true,
-            MetaMethod = "Connect",
-			IsExploit = checkcaller()
-        }, Remote, ...)
+		return Process:ProcessRemote({
+			Method = Method,
+			IsReceive = true,
+			MetaMethod = "Connect",
+			IsExploit = checkcaller(),
+		}, Remote, ...)
 	end
 
 	--// Connect remote
 	if not IsRemoteFunction then
-   		Remote[Method]:Connect(Callback)
+		Remote[Method]:Connect(Callback)
 	else -- Remote functions
 		self:HookClientInvoke(Remote, Method, Callback)
 	end
@@ -338,14 +357,14 @@ function Hook:BeginService(Libraries, ExtraData, ChannelId, ...)
 			Communication = Communication,
 			Process = ProcessLib,
 			Config = Config,
-			Hook = self
+			Hook = self,
 		},
 		Services = setmetatable({}, {
 			__index = function(self, Name: string): Instance
 				local Service = game:GetService(Name)
 				return cloneref(Service)
 			end,
-		})
+		}),
 	}
 
 	--// Init libraries
@@ -372,9 +391,9 @@ function Hook:BeginService(Libraries, ExtraData, ChannelId, ...)
 			end
 			self:BeginHooks()
 			Communication:ConsolePrint("Hooks loaded")
-		end
+		end,
 	})
-	
+
 	--// Process configuration
 	ProcessLib:SetChannel(Channel, IsWrapped)
 	ProcessLib:SetExtraData(ExtraData)
@@ -394,14 +413,16 @@ function Hook:LoadMetaHooks(ActorCode: string, ChannelId: number)
 	end
 
 	--// Hook current thread
-	self:BeginService(Modules, nil, ChannelId) 
+	self:BeginService(Modules, nil, ChannelId)
 end
 
 function Hook:LoadReceiveHooks()
 	local NoReceiveHooking = Config.NoReceiveHooking
 	local BlackListedServices = Config.BlackListedServices
 
-	if NoReceiveHooking then return end
+	if NoReceiveHooking then
+		return
+	end
 
 	--// Remote added
 	-- Debounced DescendantAdded to avoid massive immediate processing which can freeze the thread.
@@ -409,55 +430,55 @@ function Hook:LoadReceiveHooks()
 	local pending = {}
 	local debounceConn
 	local function processPending()
-	    if #pending == 0 then return end
-	    local batch = pending
-	    pending = {}
-	    -- Chunk processing using spawn to yield between batches.
-	    spawn(function()
-	        for _, remote in ipairs(batch) do
-	            self:ConnectClientRecive(remote)
-	        end
-	    end)
+		if #pending == 0 then
+			return
+		end
+		local batch = pending
+		pending = {}
+		-- Chunk processing using spawn to yield between batches.
+		spawn(function()
+			for _, remote in ipairs(batch) do
+				self:ConnectClientRecive(remote)
+			end
+		end)
 	end
 
 	debounceConn = game.DescendantAdded:Connect(function(Remote)
-	    table.insert(pending, Remote)
-	    -- Use a debounce timer via spawn; if already scheduled, ignore.
-	    if not debounceConn.DebounceActive then
-	        debounceConn.DebounceActive = true
-	        spawn(function()
-	            wait(debounceDelay)
-	            processPending()
-	            debounceConn.DebounceActive = false
-	        end)
-	    end
+		table.insert(pending, Remote)
+		-- Use a debounce timer via spawn; if already scheduled, ignore.
+		if not debounceConn.DebounceActive then
+			debounceConn.DebounceActive = true
+			spawn(function()
+				wait(debounceDelay)
+				processPending()
+				debounceConn.DebounceActive = false
+			end)
+		end
 	end)
 
 	-- Collect remotes with nil parents in chunks to prevent blocking.
 	local nilRemotes = getnilinstances()
 	local chunkSize = 50
 	for i = 1, #nilRemotes, chunkSize do
-	    local chunk = { unpack(nilRemotes, i, i + chunkSize - 1) }
-	    spawn(function()
-	        self:MultiConnect(chunk)
-	    end)
+		local chunk = { unpack(nilRemotes, i, i + chunkSize - 1) }
+		spawn(function()
+			self:MultiConnect(chunk)
+		end)
 	end
 
 	-- Search for remotes in services, also chunked.
 	for _, Service in next, game:GetChildren() do
-	    if not table.find(BlackListedServices, Service.ClassName) then
-	        -- skip this service
-	        goto skip_service
-	    end
-	    local descendants = Service:GetDescendants()
-	    for i = 1, #descendants, chunkSize do
-	        local chunk = { unpack(descendants, i, i + chunkSize - 1) }
-	        spawn(function()
-	            self:MultiConnect(chunk)
-	        end)
-	    end
+		if not table.find(BlackListedServices, Service.ClassName) then
+			-- skip this service
+			local descendants = Service:GetDescendants()
+			for i = 1, #descendants, chunkSize do
+				local chunk = { unpack(descendants, i, i + chunkSize - 1) }
+				spawn(function()
+					self:MultiConnect(chunk)
+				end)
+			end
+		end
 	end
-	::skip_service::
 end
 
 function Hook:LoadHooks(ActorCode: string, ChannelId: number)
