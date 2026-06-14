@@ -469,7 +469,6 @@ function Hook:LoadReceiveHooks()
 	-- Search for remotes in services, also chunked.
 	for _, Service in next, game:GetChildren() do
 		if not table.find(BlackListedServices, Service.ClassName) then
-			-- skip this service
 			local descendants = Service:GetDescendants()
 			for i = 1, #descendants, chunkSize do
 				local chunk = { unpack(descendants, i, i + chunkSize - 1) }
