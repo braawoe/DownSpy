@@ -1,3 +1,6 @@
+bits:
+some syntax is not compatible on some executor expect for it to break im working on making it compatible on some executor 
+jess:
 unavailable/fixing errors
 im struggling with freezing of roblox on potassium
 maybe some other executors are working with sigma spy but I cant test that tho
